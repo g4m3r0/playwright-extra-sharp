@@ -267,7 +267,7 @@ public class PlaywrightExtra : IBrowser, IDisposable
         return _browserContext.DisposeAsync();
     }
 
-    public async Task CloseAsync()
+    public async Task CloseAsync(BrowserCloseOptions? options = null)
     {
         if(_browser is not null)
             await _browser.CloseAsync();
