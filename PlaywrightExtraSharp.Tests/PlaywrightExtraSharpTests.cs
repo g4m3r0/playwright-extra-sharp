@@ -1,6 +1,7 @@
 ﻿using Microsoft.Playwright;
 using PlaywrightExtraSharp.Helpers;
 using PlaywrightExtraSharp.Models;
+using PlaywrightExtraSharp.Plugins.AnonymizeUa;
 using Xunit.Abstractions;
 
 namespace PlaywrightExtraSharp.Tests;
@@ -59,6 +60,35 @@ public class PlaywrightExtraSharpTests
         Assert.True(stealthTrustScore > defaultTrustScore,
             "Stealth trust score should be greater than default trust score.");
     }
+    
+    [Fact]
+    public async Task CaptureConsoleOutput()
+    {
+        // Initialize PlaywrightExtra with Chromium
+        var playwrightExtra = await new PlaywrightExtra(BrowserTypeEnum.Chromium)
+            .Install()
+            .Use(new StealthExtraPlugin())
+            .Use(new AnonymizeUaExtraPlugin())
+            .LaunchAsync(new()
+            {
+                Headless = true
+            });
+
+        // Create a new page
+        var page = await playwrightExtra.NewPageAsync(null);
+
+        // Listen to console events
+        page.Console += (_, msg) =>
+        {
+            _testOutputHelper.WriteLine($"{msg.Text}");
+        };
+
+        // Navigate to the CreepJS page
+        await page.GotoAsync(TestUrl);
+
+        // Wait for a few seconds to capture console output
+        await Task.Delay(5000);
+    }
 
     private static async Task<double> GetTrustScoreAsync(bool useStealth)
     {
@@ -69,6 +99,7 @@ public class PlaywrightExtraSharpTests
             var playwrightExtra = await new PlaywrightExtra(BrowserTypeEnum.Chromium)
                 .Install()
                 .Use(new StealthExtraPlugin())
+                .Use(new AnonymizeUaExtraPlugin())
                 .LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
 
             page = await playwrightExtra.NewPageAsync(null);
